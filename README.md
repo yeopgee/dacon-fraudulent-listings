@@ -1,39 +1,52 @@
-# Fraudulent real estate listing detection with XGBoost
+# Detecting fraudulent real estate listings with XGBoost
 
-This repository presents my contribution to the [KUBIG Team 2 DACON real estate listing project](https://github.com/KU-BIG/KUBIG_2025_SPRING/tree/main/KUBIG%20CONTEST/DL/Team2). The competition asked us to classify potentially fraudulent listings from tabular listing data. This personal repository reorganizes my local XGBoost notebook by task; the linked team repository describes the broader group project and other models.
+This repository presents my work in [KUBIG Team 2's DACON fraudulent-listing project](https://github.com/KU-BIG/KUBIG_2025_SPRING/tree/main/KUBIG%20CONTEST/DL/Team2). The team compared several machine-learning and deep-learning approaches. My part focused on exploratory analysis, feature engineering, and an XGBoost pipeline.
 
-## My work
+## Motivation
 
-- Investigated missingness and listing features, including listing age and real estate agency information.
-- Built smoothed agency risk grades. Within cross-validation, each validation grade uses only the corresponding training fold, and each training grade excludes its own outcome.
-- Tuned XGBoost with repeated stratified cross-validation and Optuna, then examined gain-based feature importance and SHAP values.
+The task was to classify listings from a small tabular dataset without visiting the property or inspecting its photos. With limited labeled data, details such as missing fields, listing age, and agency history could matter as much as the choice of classifier.
 
-The code here is adapted from my own exploratory notebook. The notebook includes alternative feature choices and experiments that are not part of the streamlined script.
+## My contribution
 
-## Files
+- Examined missingness and feature distributions, then created listing-age and other listing-level features.
+- Built smoothed agency-risk grades. The implementation avoids using a validation listing's label when constructing its agency feature during cross-validation.
+- Tuned XGBoost with repeated stratified cross-validation and Optuna, then inspected gain importance and SHAP values.
 
-| File | Purpose |
-| --- | --- |
-| `preprocess.py` | Train-fitted missing-value handling and outlier rules |
-| `features.py` | Listing features, categorical encoding, and agency risk grades |
-| `train.py` | Repeated-CV tuning, final XGBoost fit, and submission output |
-| `explain.py` | Gain importance and SHAP plots from a saved model |
-| `notebooks/preprocessed_xgboost.ipynb` | Cleaned copy of the original exploratory notebook |
-
-## Use
-
-Obtain `train.csv`, `test.csv`, and `sample_submission.csv` from the [DACON competition](https://dacon.io/competitions/official/236439/data). These datasets are not included here. Install dependencies and run:
-
-```bash
-python -m pip install -r requirements.txt
-python train.py --train data/train.csv --test data/test.csv \
-  --sample-submission data/sample_submission.csv
-python explain.py --model outputs/xgboost.json \
-  --features outputs/train_features.csv
+```mermaid
+flowchart LR
+    A[Listing data] --> B[EDA and missingness review]
+    B --> C[Listing and agency features]
+    C --> D[XGBoost tuning]
+    D --> E[Predictions and feature interpretation]
 ```
 
-The original experiment used 100 Optuna trials and 5-fold cross-validation repeated 3 times, so a full run can take substantial time. For a short trial, pass `--trials 2 --repeats 1`.
+## Results
 
-## Interpretation
+The chart below is the **team's macro-F1 model comparison**, which includes the XGBoost approach alongside other models. It is reproduced from the [team README](https://github.com/KU-BIG/KUBIG_2025_SPRING/tree/main/KUBIG%20CONTEST/DL/Team2).
 
-The agency grade is protected against direct label leakage within each cross-validation split. The other preprocessing steps are fitted once on the full training data before cross-validation, as in the exploratory notebook; therefore, the CV score is an internal tuning measure rather than an independent estimate of generalization. No competition data or trained model is included in this repository.
+![Team comparison of models using macro F1](https://github.com/user-attachments/assets/7140f5f3-aa5c-4cd9-8a63-952f83060f2b)
+
+The broader team found tree-based methods competitive on this task. This repository contains my XGBoost experiments and feature pipeline, rather than all models shown in the chart.
+
+## Discussion
+
+The small, imbalanced dataset made preprocessing and validation choices consequential. In particular, agency history can be informative, but agency-risk features must be constructed without using the outcome of the listing being evaluated. The code separates preprocessing, feature construction, model tuning, and interpretation so those choices are easy to inspect.
+
+## Code and usage
+
+| File | Role |
+| --- | --- |
+| [`preprocess.py`](preprocess.py) | Missing-value and outlier handling |
+| [`features.py`](features.py) | Listing and agency features |
+| [`train.py`](train.py) | Cross-validation, tuning, final fit, and submission |
+| [`explain.py`](explain.py) | Gain and SHAP feature importance |
+| [`notebooks/preprocessed_xgboost.ipynb`](notebooks/preprocessed_xgboost.ipynb) | Original exploratory experiments |
+
+Download the data from the [DACON competition](https://dacon.io/competitions/official/236439/data), install [`requirements.txt`](requirements.txt), and run:
+
+```bash
+python train.py --train data/train.csv --test data/test.csv --sample-submission data/sample_submission.csv
+python explain.py --model outputs/xgboost.json --features outputs/train_features.csv
+```
+
+The competition data and trained model are not included here.
