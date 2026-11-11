@@ -26,7 +26,7 @@ The team compared models using macro F1. The chart below includes my XGBoost app
 
 ![Team comparison of models using macro F1](https://github.com/user-attachments/assets/7140f5f3-aa5c-4cd9-8a63-952f83060f2b)
 
-Tree-based methods performed well in the team's comparison. The other models shown in the chart are part of the broader team project.
+In the team's comparison, XGBoost achieved a macro F1 score of **0.8871**, close to the highest reported score of **0.8881** (TabPFN).
 
 ## Discussion
 
