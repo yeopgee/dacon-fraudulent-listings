@@ -34,12 +34,15 @@ def prepare_data(train_raw, test_raw):
     """Apply the notebook's preprocessing and feature engineering choices."""
     fill_values = fit_fill_values(train_raw)
     train = filter_training_outliers(transform_missing(train_raw, fill_values))
-    test = transform_missing(test_raw, fill_values)
+    # The notebook computes test-set fill values from its already transformed
+    # training frame, while retaining the first transformation for training.
+    test_fill_values = fit_fill_values(transform_missing(train_raw, fill_values))
+    test = transform_missing(test_raw, test_fill_values)
     feature_state = fit_feature_state(train)
-    return transform_features(train, feature_state), transform_features(test, feature_state)
+    return transform_features(train, feature_state, is_train=True), transform_features(test, feature_state)
 
 
-def tune_model(x, y, trials, folds, repeats, seed):
+def tune_model(x, y, trials, folds, repeats, seed, optuna_seed=None):
     class_weight = (y == 0).sum() / (y == 1).sum()
     cv = RepeatedStratifiedKFold(n_splits=folds, n_repeats=repeats, random_state=seed)
 
@@ -47,15 +50,15 @@ def tune_model(x, y, trials, folds, repeats, seed):
         params = {
             "objective": "binary:logistic",
             "eval_metric": "logloss",
-            "seed": seed,
+            "random_state": seed,
             "scale_pos_weight": class_weight,
             "max_depth": trial.suggest_int("max_depth", 3, 15),
-            "eta": trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
+            "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
             "subsample": trial.suggest_float("subsample", 0.6, 1.0),
             "colsample_bytree": trial.suggest_float("colsample_bytree", 0.6, 1.0),
             "gamma": trial.suggest_float("gamma", 0, 5),
-            "alpha": trial.suggest_float("reg_alpha", 0, 5),
-            "lambda": trial.suggest_float("reg_lambda", 0, 5),
+            "reg_alpha": trial.suggest_float("reg_alpha", 0, 5),
+            "reg_lambda": trial.suggest_float("reg_lambda", 0, 5),
             "min_child_weight": trial.suggest_int("min_child_weight", 1, 10),
         }
         rounds = trial.suggest_int("num_boost_round", 100, 1000)
@@ -75,10 +78,15 @@ def tune_model(x, y, trials, folds, repeats, seed):
                 verbose_eval=False,
             )
             prediction = (model.predict(dvalid) > 0.5).astype(int)
+            # Match the notebook's positive-class (binary) F1 tuning objective;
+            # the team's final comparison chart reports macro F1 separately.
             scores.append(f1_score(y.iloc[validation], prediction))
         return float(np.mean(scores))
 
-    study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=seed))
+    # The notebook leaves Optuna's search unseeded; an optional seed supports
+    # repeatable reruns without changing the default experiment.
+    sampler = optuna.samplers.TPESampler(seed=optuna_seed) if optuna_seed is not None else None
+    study = optuna.create_study(direction="maximize", sampler=sampler)
     study.optimize(objective, n_trials=trials)
     return study.best_params, study.best_value
 
@@ -95,15 +103,18 @@ def main():
     parser.add_argument("--folds", type=int, default=5)
     parser.add_argument("--repeats", type=int, default=3)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--optuna-seed", type=int)
     args = parser.parse_args()
 
     train, test = prepare_data(pd.read_csv(args.train), pd.read_csv(args.test))
     y = train.pop(TARGET)
     test = test.drop(columns=TARGET, errors="ignore")
-    params, score = tune_model(train, y, args.trials, args.folds, args.repeats, args.seed)
+    params, score = tune_model(train, y, args.trials, args.folds, args.repeats,
+                               args.seed, args.optuna_seed)
     rounds = params.pop("num_boost_round")
     class_weight = (y == 0).sum() / (y == 1).sum()
-    params.update({"objective": "binary:logistic", "eval_metric": "logloss", "seed": args.seed, "scale_pos_weight": class_weight})
+    params.update({"objective": "binary:logistic", "eval_metric": "logloss",
+                   "random_state": args.seed, "scale_pos_weight": class_weight})
     train_final, test_final = add_agency_grade(train, y, test)
     model = xgb.train(params, xgb.DMatrix(train_final, label=y), num_boost_round=rounds)
     predicted = (model.predict(xgb.DMatrix(test_final)) > 0.5).astype(int)
