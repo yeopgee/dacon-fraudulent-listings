@@ -2,7 +2,7 @@
 
 This repository contains my exploratory analysis, feature engineering, and XGBoost experiments from the [KUBIG Team 2 DACON project](https://github.com/KU-BIG/KUBIG_2025_SPRING/tree/main/KUBIG%20CONTEST/DL/Team2). For more information about the project, see the team repository.
 
-## Motivation
+## Goal
 
 The task was to identify fraudulent real estate listings using tabular information, without visiting properties or viewing photographs. The dataset was small and imbalanced, making feature construction and validation especially important.
 
