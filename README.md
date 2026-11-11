@@ -4,33 +4,25 @@ This repository contains my exploratory analysis, feature engineering, and XGBoo
 
 ## Goal
 
-The task was to identify fraudulent real estate listings using tabular information, without visiting properties or viewing photographs. The dataset was small and imbalanced, making feature construction and validation especially important.
+The task was to identify fraudulent real estate listings from tabular data, without visiting properties or viewing photographs. The dataset was small and imbalanced, making feature construction particularly important.
 
 ## My contribution
 
-- Examined missing values and feature distributions, then created listing-age and other listing features.
-- Built smoothed agency-risk features without using validation labels to construct those features during cross-validation.
-- Tuned XGBoost with repeated stratified cross-validation and Optuna, then examined gain importance and SHAP values.
-
-```mermaid
-flowchart LR
-    A[Listing data] --> B[EDA and missingness review]
-    B --> C[Listing and agency features]
-    C --> D[XGBoost tuning]
-    D --> E[Predictions and feature interpretation]
-```
+- Conducted exploratory data analysis (EDA) to examine patterns in the listings.
+- Engineered listing and agency features based on those findings.
+- Tuned an XGBoost classifier with Optuna and examined gain importance and SHAP values.
 
 ## Results
 
-The team compared models using macro F1. The chart below includes my XGBoost approach alongside other team members' models and comes from the [team README](https://github.com/KU-BIG/KUBIG_2025_SPRING/tree/main/KUBIG%20CONTEST/DL/Team2).
+The team compared models using macro F1. The chart below shows my XGBoost approach alongside other team members’ models and comes from the [team README](https://github.com/KU-BIG/KUBIG_2025_SPRING/tree/main/KUBIG%20CONTEST/DL/Team2).
 
 ![Team comparison of models using macro F1](https://github.com/user-attachments/assets/7140f5f3-aa5c-4cd9-8a63-952f83060f2b)
 
-In the team's comparison, XGBoost achieved a macro F1 score of **0.8871**, close to the highest reported score of **0.8881** (TabPFN).
+XGBoost achieved a macro F1 score of **0.8871**, close to the highest reported score of **0.8881** for TabPFN.
 
 ## Discussion
 
-This project highlighted the value of feature construction and careful validation for small tabular datasets. Agency history can be useful, but its risk feature must be calculated without the label of the listing being evaluated.
+This project showed me how EDA can guide feature engineering and how feature importance can help interpret a model’s predictions. My XGBoost approach performed close to the team’s top-scoring model.
 
 ## Code structure
 
@@ -38,6 +30,6 @@ This project highlighted the value of feature construction and careful validatio
 | --- | --- |
 | [`preprocess.py`](preprocess.py) | Missing-value and outlier handling |
 | [`features.py`](features.py) | Listing and agency features |
-| [`train.py`](train.py) | Cross-validation, tuning, final fit, and submission |
+| [`train.py`](train.py) | Tuning, final fit, and submission |
 | [`explain.py`](explain.py) | Gain and SHAP feature importance |
 | [`notebooks/preprocessed_xgboost.ipynb`](notebooks/preprocessed_xgboost.ipynb) | Original exploratory experiments |
