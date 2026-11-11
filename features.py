@@ -39,13 +39,16 @@ def fit_feature_state(train: pd.DataFrame) -> dict:
     return state
 
 
-def transform_features(data: pd.DataFrame, state: dict) -> pd.DataFrame:
+def transform_features(data: pd.DataFrame, state: dict, is_train=False) -> pd.DataFrame:
     """Apply train-fitted feature choices without changing the input frame."""
     result = data.drop(columns=["ID", "주차가능여부", "해당층", "욕실수"], errors="ignore").copy()
     result["게재일수"] = (state["max_date"] - pd.to_datetime(result.pop("게재일"))).dt.days.clip(lower=0)
     result["총주차대수"] = np.log1p(result["총주차대수"])
     categorical = result[ONE_HOT_COLUMNS].copy()
-    categorical["제공플랫폼"] = categorical["제공플랫폼"].replace(list(state["rare_platforms"]), "기타")
+    # As in the notebook, collapse rare platforms in training only. Unseen
+    # test levels are handled by the fitted encoder's handle_unknown setting.
+    if is_train:
+        categorical["제공플랫폼"] = categorical["제공플랫폼"].replace(list(state["rare_platforms"]), "기타")
     encoded = state["encoder"].transform(categorical)
     encoded = pd.DataFrame(encoded, columns=state["encoder"].get_feature_names_out(ONE_HOT_COLUMNS), index=result.index)
     return pd.concat([result.drop(columns=ONE_HOT_COLUMNS), encoded], axis=1)
