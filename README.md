@@ -18,7 +18,7 @@ The team compared models using macro F1. The chart below shows my XGBoost approa
 
 ![Team comparison of models using macro F1](https://github.com/user-attachments/assets/7140f5f3-aa5c-4cd9-8a63-952f83060f2b)
 
-XGBoost achieved a macro F1 score of **0.8871**, close to the highest reported score of **0.8881** for TabPFN.
+XGBoost achieved a macro F1 score of **0.8871**, close to the highest reported score of **0.8881** for TabPFN. The notebook and [`train.py`](train.py) tune XGBoost using binary F1; the chart reports the team's macro F1 comparison.
 
 ## Interpretation
 
