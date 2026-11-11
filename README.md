@@ -20,9 +20,9 @@ The team compared models using macro F1. The chart below shows my XGBoost approa
 
 XGBoost achieved a macro F1 score of **0.8871**, close to the highest reported score of **0.8881** for TabPFN.
 
-## Discussion
+## Interpretation
 
-This project showed me how EDA can guide feature engineering and how feature importance can help interpret a model’s predictions. My XGBoost approach performed close to the team’s top-scoring model.
+This project showed me how EDA can guide feature engineering and how feature importance can help interpret predictions. My XGBoost model performed well, while the transformer-based TabPFN model scored slightly higher on this artificial tabular dataset.
 
 ## Code structure
 
