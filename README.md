@@ -9,7 +9,7 @@ The task was to identify fraudulent real estate listings from tabular data, with
 ## My contribution
 
 - Conducted exploratory data analysis (EDA) to examine patterns in the variables.
-- Engineered listing and agency features based on those findings.
+- Engineered listing and agency features based on EDA, including an agency risk grade computed from additively smoothing.
 - Tuned an XGBoost classifier with Optuna and examined gain importance and SHAP values.
 
 ## Results
