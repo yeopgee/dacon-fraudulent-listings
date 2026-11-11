@@ -8,6 +8,8 @@ from sklearn.linear_model import LinearRegression
 def fit_fill_values(train: pd.DataFrame) -> dict:
     """Fit imputation quantities on training rows only."""
     parking = train.copy()
+    # The notebook fills total-floor values before fitting the parking model.
+    parking['총층'] = parking['총층'].fillna(train['총층'].median())
     parking.loc[parking["주차가능여부"] == "불가능", "총주차대수"] = 0
     valid = parking.dropna(subset=["총주차대수", "총층"])
     parking_model = LinearRegression().fit(valid[["총층"]], valid["총주차대수"])
@@ -21,7 +23,7 @@ def fit_fill_values(train: pd.DataFrame) -> dict:
     }
 
 
-def transform_missing(data: pd.DataFrame, fill_values: dict, seed: int = 42) -> pd.DataFrame:
+def transform_missing(data: pd.DataFrame, fill_values: dict, seed=None) -> pd.DataFrame:
     """Create a missingness indicator and apply train-derived fill values."""
     data = data.copy()
     data["NA여부"] = np.select(
@@ -35,15 +37,19 @@ def transform_missing(data: pd.DataFrame, fill_values: dict, seed: int = 42) -> 
     )
     for col in ["전용면적", "총층", "욕실수", "방수"]:
         data[col] = data[col].fillna(fill_values[col])
-    rng = np.random.default_rng(seed)
     missing_floor = data["해당층"].isna()
     upper = data.loc[missing_floor, "총층"].clip(lower=1).astype(int).to_numpy()
-    data.loc[missing_floor, "해당층"] = [rng.integers(1, top + 1) for top in upper]
+    # The original notebook draws each missing floor uniformly from 1..총층.
+    rng = np.random.default_rng(seed) if seed is not None else None
+    data.loc[missing_floor, "해당층"] = [
+        rng.integers(1, top + 1) if rng is not None else np.random.randint(1, top + 1)
+        for top in upper
+    ]
     data.loc[data["주차가능여부"] == "불가능", "총주차대수"] = 0
     missing_parking = data["총주차대수"].isna()
     if missing_parking.any():
         prediction = fill_values["parking_model"].predict(data.loc[missing_parking, ["총층"]])
-        data.loc[missing_parking, "총주차대수"] = np.maximum(0, np.round(prediction))
+        data.loc[missing_parking, "총주차대수"] = np.round(prediction)
     data.loc[data["월세"] == 0, "월세"] = fill_values["월세"]
     return data
 
