@@ -1,4 +1,4 @@
-# Detecting fraudulent real estate listings with XGBoost
+# Detecting fraudulent real estate listings
 
 This repository contains my exploratory analysis, feature engineering, and XGBoost experiments from the [KUBIG Team 2 DACON project](https://github.com/KU-BIG/KUBIG_2025_SPRING/tree/main/KUBIG%20CONTEST/DL/Team2). For more information about the project, see the team repository.
 
