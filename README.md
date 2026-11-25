@@ -33,3 +33,46 @@ This project showed me how EDA can guide feature engineering and how feature imp
 | [`train.py`](train.py) | Tuning, final fit, and submission |
 | [`explain.py`](explain.py) | Gain and SHAP feature importance |
 | [`notebooks/preprocessed_xgboost.ipynb`](notebooks/preprocessed_xgboost.ipynb) | Original exploratory experiments |
+
+## Running the code
+
+Run commands from the repository root. Use a separate virtual environment:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+For interactive exploration, install `requirements-notebook.txt` instead. The
+notebook now includes section headings linking each stage to its Python module.
+The Python scripts expose the main workflow; the notebook also preserves optional
+plots and alternative experiments. Datasets, checkpoints, and generated outputs
+are not committed.
+
+On macOS, XGBoost also needs the OpenMP runtime (`libomp`), which is not
+installed by pip. Install it with `brew install libomp` if the XGBoost import
+reports a missing `libomp.dylib`.
+
+Place the competition's `train.csv`, `test.csv`, and `sample_submission.csv` under
+`data/`, then run:
+
+```bash
+python train.py --train data/train.csv --test data/test.csv --sample-submission data/sample_submission.csv
+python explain.py --model outputs/xgboost.json --features outputs/train_features.csv --output-dir outputs
+```
+
+Use `--trials`, `--folds`, and `--repeats` to control tuning cost. `--optuna-seed`
+optionally seeds the search; the original experiment left it unseeded.
+
+The CLI corresponds to the notebook's smoothed agency-risk-grade branch. The
+continuous agency-rate/count features and random-forest imputation remain in the
+notebook as alternatives. The notebook restores a saved copy of the imputed data
+before switching branches. Its final fit now explicitly retains the same binary
+classification objective as the tuning loop and CLI.
+
+Agency target encoding is fitted within each CV training fold, with leave-one-out
+rates for training rows. Other preprocessing and the class-weight calculation
+remain outside CV to preserve the experiment; therefore this is not a completely
+fold-isolated preprocessing pipeline. Binary F1 drives tuning, while the README's
+team comparison reports macro F1.

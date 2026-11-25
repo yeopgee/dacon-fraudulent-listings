@@ -33,10 +33,11 @@ def add_agency_grade(train_x, train_y, evaluation_x):
 def prepare_data(train_raw, test_raw):
     """Apply the notebook's preprocessing and feature engineering choices."""
     fill_values = fit_fill_values(train_raw)
-    train = filter_training_outliers(transform_missing(train_raw, fill_values))
+    transformed_train = transform_missing(train_raw, fill_values)
+    train = filter_training_outliers(transformed_train)
     # The notebook computes test-set fill values from its already transformed
     # training frame, while retaining the first transformation for training.
-    test_fill_values = fit_fill_values(transform_missing(train_raw, fill_values))
+    test_fill_values = fit_fill_values(transformed_train)
     test = transform_missing(test_raw, test_fill_values)
     feature_state = fit_feature_state(train)
     return transform_features(train, feature_state, is_train=True), transform_features(test, feature_state)
